@@ -2,12 +2,13 @@
 <template>
 	<template-view :viewTag="viewTag" :errorText="errorText" :retry="retry">
 		<template slot="container">
+			<uni-fab :content="content" horizontal="right" :popMenu="false" @fabClick="fabClick"></uni-fab>
 			<uni-list>
 				<uni-list-item
 					v-for="(item, index) in songDatas"
 					v-bind:key="index"
 					class="item-height"
-					:title="index + 1 + '.' + item.fileName"
+					:title="(curHash == item.hash ? '' : index + 1 + '.') + item.fileName"
 					link
 					:show-extra-icon="curHash == item.hash"
 					:extra-icon="{ color: '#0288d1', size: '20', type: 'headphones' }"
@@ -34,7 +35,8 @@ export default {
 			curCBNum: 0,
 			songDatas: [],
 			curHash: '',
-			curIndex: -1
+			curIndex: -1,
+			content: [{ iconPath: '/static/images/lrc.png', text: '查看歌词', active: false }]
 		};
 	},
 	onLoad() {
@@ -87,10 +89,11 @@ export default {
 				hash,
 				function(result) {
 					that.curCBNum++;
+					if (result.status == 0) {
+						return;
+					}
 					var data = {};
 					var urls = result.url;
-					data.fileName = result.fileName;
-					data.hash = hash;
 					var flag = false;
 					for (var i = 0; i < urls.length; i++) {
 						var url = urls[i];
@@ -101,6 +104,9 @@ export default {
 						}
 					}
 					if (flag) {
+						data.hash = hash;
+						data.fileName = result.fileName;
+						data.duration = parseInt(result.timeLength) * 1000;
 						that.songDatas.push(data);
 					}
 
@@ -115,6 +121,23 @@ export default {
 					}
 				}
 			);
+		},
+		/**
+		 * 点击悬浮菜单
+		 */
+		fabClick() {
+			if (this.curIndex < 0) {
+				uni.showToast({
+					title: '请先选择歌曲!',
+					duration: 2000
+				});
+				return;
+			}
+			var songInfo = this.songDatas[this.curIndex];
+			var url = '/pages/lrcView/lrcView?fileName=' + encodeURIComponent(songInfo.fileName) + '&hash=' + songInfo.hash + '&duration=' + songInfo.duration;
+			uni.navigateTo({
+				url: url
+			});
 		},
 		/**
 		 * 播放歌曲
@@ -179,7 +202,7 @@ export default {
 			if (curIndex >= this.songDatas.length) {
 				this.curHash = '';
 				uni.showToast({
-					title: '已是最后一首',
+					title: '已是最后一首!',
 					duration: 2000
 				});
 				return;
@@ -200,7 +223,7 @@ export default {
 			if (curIndex < 0) {
 				this.curHash = '';
 				uni.showToast({
-					title: '已是第一首',
+					title: '已是第一首!',
 					duration: 2000
 				});
 				return;

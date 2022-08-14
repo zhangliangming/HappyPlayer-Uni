@@ -46,3 +46,62 @@ export const reqSongInfo = function(key, hash, success, error) {
 		},
 	});
 }
+
+/**
+ * 获取歌词文件
+ * @param {Object} keyword
+ * @param {Object} duration
+ * @param {Object} hash
+ * @param {Object} success
+ * @param {Object} error
+ */
+export const reqLyricsList = function(keyword, duration, hash, success, error) {
+	uni.request({
+		url: 'http://lyrics.kugou.com/search',
+		method: 'GET',
+		data: {
+			ver: '1',
+			man: 'yes',
+			client: 'pc',
+			keyword: keyword,
+			duration: duration,
+			hash: hash
+		},
+		header: {},
+		success: (res) => {
+			success && success(res.data);
+		},
+		fail: (res) => {
+			error && error(res);
+		},
+	});
+}
+
+/**
+ * 获取歌词文件
+ * @param {Object} id
+ * @param {Object} accesskey
+ * @param {Object} success
+ * @param {Object} error
+ */
+export const reqLyricsInfo = function(id, accesskey, success, error) {
+	uni.request({
+		url: 'http://lyrics.kugou.com/download',
+		method: 'GET',
+		data: {
+			ver: '1',
+			client: 'pc',
+			id: id,
+			accesskey: accesskey,
+			charset: 'utf8',
+			fmt: 'krc'
+		},
+		header: {},
+		success: (res) => {
+			success && success(res.data);
+		},
+		fail: (res) => {
+			error && error(res);
+		},
+	});
+}

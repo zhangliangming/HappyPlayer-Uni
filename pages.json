@@ -21,6 +21,11 @@
 				"navigationBarTitleText": "关于"
 			}
 
+		}, {
+			"path": "pages/lrcView/lrcView",
+			"style": {
+				"navigationBarTitleText": ""
+			}
 		}
 	],
 	"globalStyle": {
