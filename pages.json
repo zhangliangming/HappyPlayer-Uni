@@ -5,12 +5,22 @@
 			"style": {
 				"navigationBarTitleText": "网络"
 			}
-		},
-		{
+		}, {
 			"path": "pages/index/setting",
 			"style": {
 				"navigationBarTitleText": "设置"
 			}
+		}, {
+			"path": "pages/setting/feedback",
+			"style": {
+				"navigationBarTitleText": "反馈和建议"
+			}
+		}, {
+			"path": "pages/setting/about",
+			"style": {
+				"navigationBarTitleText": "关于"
+			}
+
 		}
 	],
 	"globalStyle": {
@@ -21,7 +31,7 @@
 	"tabBar": {
 		"color": "#666",
 		"selectedColor": "#0288d1",
-		"borderStyle": "black",
+		"borderStyle": "#e4e4e4",
 		"backgroundColor": "#ffffff",
 		"list": [{
 			"iconPath": "static/images/net.png",

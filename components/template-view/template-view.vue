@@ -1,29 +1,22 @@
 <template>
-	<view class="content">
+	<view>
 		<slot v-if="viewTag == 'successView'" name="container"></slot>
 
 		<slot v-else-if="viewTag == 'loadingView'" name="loadingView">
 			<div class="horizontal vertical">
-				<div>
-					<div class="horizontal"><uni-icons type="spinner-cycle" size="30"></uni-icons></div>
-					<div class="mt10" v-if="loadText != undefined && loadText != ''">{{ loadText }}</div>
-				</div>
+				<div class="mt10" v-if="loadText != undefined && loadText != ''">{{ loadText }}</div>
 			</div>
 		</slot>
 
 		<slot v-else-if="viewTag == 'nullView'" name="nullView">
 			<div class="horizontal vertical">
-				<div>
-					<div class="horizontal"><uni-icons type="info" size="30"></uni-icons></div>
-					<div class="mt10" v-if="nullText != undefined && nullText != ''">{{ nullText }}</div>
-				</div>
+				<div class="mt10" v-if="nullText != undefined && nullText != ''">{{ nullText }}</div>
 			</div>
 		</slot>
 
 		<slot v-else name="errorView">
 			<div class="horizontal pt60">
 				<div>
-					<div class="horizontal"><uni-icons type="paperplane" size="30"></uni-icons></div>
 					<div class="mt10" v-if="errorText != undefined && errorText != ''">{{ errorText }}</div>
 					<div class="horizontal"><button class="mt20" type="default" size="mini" plain="true" @click="retry">重试</button></div>
 				</div>
@@ -56,7 +49,7 @@ export default {
 		 * 加载中文案
 		 */ loadText: {
 			type: String,
-			default: '加载中'
+			default: '加载中...'
 		},
 
 		/**

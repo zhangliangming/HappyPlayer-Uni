@@ -22,7 +22,7 @@
         "distribute" : {
             /* android打包配置 */
             "android" : {
-                "permissions" : [],
+                "permissions" : [ "<uses-permission android:name=\"android.permission.INTERNET\"/>" ],
                 "autoSdkPermissions" : false
             },
             /* ios打包配置 */
@@ -60,5 +60,6 @@
         "router" : {
             "mode" : "history"
         }
-    }
+    },
+    "fallbackLocale" : "zh-Hans"
 }
