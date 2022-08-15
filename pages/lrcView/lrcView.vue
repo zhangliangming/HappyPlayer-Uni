@@ -47,7 +47,11 @@ export default {
 				},
 				{
 					icon: 'tune',
-					text: '歌词进度'
+					text: '进度'
+				},
+				{
+					icon: 'paperclip',
+					text: '音/翻'
 				}
 			],
 			buttonGroup: [
