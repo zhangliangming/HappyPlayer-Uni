@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "js-md5": "^0.7.3",
-    "pako": "^2.0.4"
+    "pako": "^2.0.4",
+    "popmotion": "^9.3.5"
   }
 }

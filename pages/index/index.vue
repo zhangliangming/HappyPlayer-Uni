@@ -2,7 +2,7 @@
 <template>
 	<template-view :viewTag="viewTag" :errorText="errorText" :retry="retry">
 		<template slot="container">
-			<uni-fab :content="content" horizontal="right" :popMenu="false" @fabClick="fabClick"></uni-fab>
+			<uni-fab horizontal="right" :popMenu="false" @fabClick="fabClick"></uni-fab>
 			<uni-list>
 				<uni-list-item
 					v-for="(item, index) in songDatas"
@@ -26,6 +26,8 @@ import md5 from 'js-md5';
  * 播放器
  */
 var mPlayer = null;
+var mTimer = null;
+
 export default {
 	data() {
 		return {
@@ -35,13 +37,30 @@ export default {
 			curCBNum: 0,
 			songDatas: [],
 			curHash: '',
-			curIndex: -1,
-			content: [{ iconPath: '/static/images/lrc.png', text: '查看歌词', active: false }]
+			curIndex: -1
 		};
 	},
 	onLoad() {
 		//执行重试
 		this.retry();
+
+		//监听操作
+		const that = this;
+		uni.$on('action', function(result) {
+			switch (result.action) {
+				case 'pre':
+					that.pre();
+					break;
+
+				case 'next':
+					that.next();
+					break;
+
+				case 'playOrPause':
+					that.playOrPause();
+					break;
+			}
+		});
 	},
 	methods: {
 		/**
@@ -126,18 +145,29 @@ export default {
 		 * 点击悬浮菜单
 		 */
 		fabClick() {
-			if (this.curIndex < 0) {
-				uni.showToast({
-					title: '请先选择歌曲!',
-					duration: 2000
-				});
-				return;
+			var url = '/pages/lrcView/lrcView';
+			if (this.curIndex > -1) {
+				var songInfo = this.songDatas[this.curIndex];
+				url += '?fileName=' + encodeURIComponent(songInfo.fileName) + '&hash=' + songInfo.hash + '&duration=' + songInfo.duration;
 			}
-			var songInfo = this.songDatas[this.curIndex];
-			var url = '/pages/lrcView/lrcView?fileName=' + encodeURIComponent(songInfo.fileName) + '&hash=' + songInfo.hash + '&duration=' + songInfo.duration;
+
 			uni.navigateTo({
 				url: url
 			});
+		},
+
+		/**
+		 * 播放或者暂停歌曲
+		 */
+		playOrPause() {
+			if (mPlayer != null) {
+				if (mPlayer.paused) {
+					//暂停
+					mPlayer.play();
+				} else {
+					mPlayer.pause();
+				}
+			}
 		},
 		/**
 		 * 播放歌曲
@@ -166,15 +196,28 @@ export default {
 			//播放歌曲
 			this.curHash = hash;
 			this.curIndex = index;
+
 			mPlayer = uni.createInnerAudioContext();
 			mPlayer.src = url;
-			mPlayer.play();
 			mPlayer.onPlay(() => {
 				//播放
+				//发送
+				this.sendEvent({
+					action: 'play'
+				});
+				
+				if (mTimer != null) {
+					clearTimeout(mTimer);
+				}
+				mTimer = setTimeout(this.updateProgress, 0);
 			});
 
 			mPlayer.onPause(() => {
 				//暂停
+				//发送
+				this.sendEvent({
+					action: 'pause'
+				});
 			});
 
 			mPlayer.onEnded(() => {
@@ -188,7 +231,48 @@ export default {
 					content: '播放异常',
 					success: function(res) {}
 				});
+
+				//发送初始化
+				this.sendEvent({
+					action: 'error'
+				});
 			});
+
+			mPlayer.onCanplay(() => {
+				//console.log('onCanplay');
+				mPlayer.play();
+			});
+
+			//发送初始化
+			this.sendEvent({
+				action: 'init',
+				hash: hash,
+				duration: songInfo.duration,
+				fileName: songInfo.fileName
+			});
+		},
+
+		/**
+		 * 更新进度
+		 */
+		updateProgress() {
+			if (mPlayer != null && !mPlayer.paused) {
+				//发送
+				this.sendEvent({
+					action: 'progress',
+					progress: parseInt(mPlayer.currentTime * 1000 + ''),
+					duration: parseInt(mPlayer.duration * 1000 + '')
+				});
+
+				mTimer = setTimeout(this.updateProgress, 100);
+			}
+		},
+		/**
+		 * 发送播放事件
+		 */
+		sendEvent(msg) {
+			// console.log('sendEvent->' + JSON.stringify(msg));
+			uni.$emit('event', msg);
 		},
 		/**
 		 * 下一首
@@ -196,6 +280,7 @@ export default {
 		next() {
 			if (mPlayer != null) {
 				mPlayer.stop();
+				mPlayer = null;
 			}
 			var curIndex = this.curIndex;
 			curIndex++;
@@ -205,6 +290,12 @@ export default {
 					title: '已是最后一首!',
 					duration: 2000
 				});
+
+				//发送
+				this.sendEvent({
+					action: 'null'
+				});
+
 				return;
 			}
 			var songInfo = this.songDatas[curIndex];
@@ -217,6 +308,7 @@ export default {
 		pre() {
 			if (mPlayer != null) {
 				mPlayer.stop();
+				mPlayer = null;
 			}
 			var curIndex = this.curIndex;
 			curIndex--;
@@ -225,6 +317,11 @@ export default {
 				uni.showToast({
 					title: '已是第一首!',
 					duration: 2000
+				});
+
+				//发送
+				this.sendEvent({
+					action: 'null'
 				});
 				return;
 			}
