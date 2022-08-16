@@ -94,12 +94,11 @@ export const getDynamicLrcWordHLWidth = function(ctx, lyricsInfos, lyricsLineNum
 				elapseTime += interval;
 				if (playingTime <= elapseTime) {
 					//计算之前所有字的长度
-					var beforeWordWidth = parseInt(ctx.measureText(tempWords).width);
+					var beforeWordWidth = getTextWidth(ctx, tempWords);
 
 					// 当前歌词字
 					var curWord = lyricsWords[i].replace(/\s+$/g, ''); //js去掉空格
-					var wordWidth = parseInt(ctx.measureText(curWord).width);
-
+					var wordWidth = getTextWidth(ctx, curWord);
 					//计算平均速度
 					var avg = wordWidth / interval;
 					var lenTime = interval - (elapseTime - playingTime);
@@ -112,11 +111,11 @@ export const getDynamicLrcWordHLWidth = function(ctx, lyricsInfos, lyricsLineNum
 
 			if (elapseTime < playingTime) {
 				//防止有些歌词的结束时间大于每个字时间间隔和
-				result = parseInt(ctx.measureText(lyricsContent).width);
+				result = getTextWidth(ctx, lyricsContent);
 			}
 		} else if (endTime < playingTime) {
 			//防止有些歌词的结束时间大于每个字时间间隔和
-			result = parseInt(ctx.measureText(lyricsContent).width);
+			result = getTextWidth(ctx, lyricsContent);
 		}
 	}
 	return result;
@@ -126,11 +125,9 @@ export const getDynamicLrcWordHLWidth = function(ctx, lyricsInfos, lyricsLineNum
  * 分割歌词
  * @param {Object} lrcInfo 歌词
  * @param {Object} ctx 画布
- * @param {Object} fontSize 字体大小
  * @param {Object} textMaxWidth 最大宽度
  */
-export const splitLyrics = function(lrcInfo, ctx, fontSize, textMaxWidth) {
-	ctx.font = 'normal normal ' + fontSize + 'px cursive'
+export const splitLyrics = function(lrcInfo, ctx, textMaxWidth) {
 	var lyricsType = lrcInfo.lyricsType; //0是lrc，1是动感
 	var lyricsInfos = lrcInfo.lyricsInfos; //默认歌词
 	var translateLrcInfos = lrcInfo.translateLrcInfos; //翻译歌词
@@ -138,6 +135,7 @@ export const splitLyrics = function(lrcInfo, ctx, fontSize, textMaxWidth) {
 	for (var i = 0; i < lyricsInfos.length; i++) {
 		var lyricsLineInfo = lyricsInfos[i];
 		if (lyricsType == 1) {
+			//动感歌词
 
 			//音译歌词，默认使用动感歌词分割
 			if (transliterationLrcInfos != undefined && transliterationLrcInfos != null && transliterationLrcInfos
@@ -152,7 +150,7 @@ export const splitLyrics = function(lrcInfo, ctx, fontSize, textMaxWidth) {
 				splitTranslateDynamicLrc(lyricsLineInfo, translateLrcInfo, ctx, textMaxWidth);
 			}
 
-			//动感歌词
+			//默认歌词
 			var splitLyricsInfos = splitLineDynamicLyrics(lyricsLineInfo, ctx, textMaxWidth);
 			lyricsLineInfo.splitLyricsInfos = splitLyricsInfos;
 
@@ -182,7 +180,7 @@ export const splitLyrics = function(lrcInfo, ctx, fontSize, textMaxWidth) {
 function splitLineLyrics(lyricsLineInfo, ctx, textMaxWidth) {
 	var splitLyricsInfos = [];
 	var lyricsContent = lyricsLineInfo.lyricsContent;
-	var lineWidth = parseInt(ctx.measureText(lyricsContent).width);
+	var lineWidth = getTextWidth(ctx, lyricsContent);
 	if (lineWidth > textMaxWidth) {
 		//分词器分词
 		var lyricsWords = getLyricsWords(lyricsContent);
@@ -190,7 +188,7 @@ function splitLineLyrics(lyricsLineInfo, ctx, textMaxWidth) {
 		var temp = '';
 		for (var i = 0; i < lyricsWords.length; i++) {
 			var curWord = lyricsWords[i];
-			var curWordWidth = parseInt(ctx.measureText(curWord).width);
+			var curWordWidth = getTextWidth(ctx, curWord);
 			if (wordWidth + curWordWidth > textMaxWidth) {
 
 				//添加分割后的歌词
@@ -250,7 +248,7 @@ function splitTranslateDynamicLrc(lyricsLineInfo, translateLrcInfo, ctx, textMax
 	fixTranslateLrc(lyricsLineInfo, translateLrcInfo);
 
 	var lyricsContent = translateLrcInfo.lyricsContent;
-	var lineWidth = parseInt(ctx.measureText(lyricsContent).width);
+	var lineWidth = getTextWidth(ctx, lyricsContent);
 	var lyricsWords = translateLrcInfo.lyricsWords;
 	var wordsDisInterval = translateLrcInfo.wordsDisInterval;
 
@@ -393,7 +391,7 @@ function splitTransliterationLrc(lyricsLineInfo, transliterationLrcInfo, ctx, te
 	//补充数据
 	fixTransliterationLrc(lyricsLineInfo, transliterationLrcInfo);
 	var lyricsContent = transliterationLrcInfo.lyricsContent;
-	var lineWidth = parseInt(ctx.measureText(lyricsContent).width);
+	var lineWidth = getTextWidth(ctx, lyricsContent);
 	//分词器分词
 	var lyricsWords = transliterationLrcInfo.lyricsWords;
 	//用默认歌词的字时间
@@ -431,6 +429,19 @@ function fixTransliterationLrc(lyricsLineInfo, transliterationLrcInfo) {
 }
 
 /**
+ * 获取文本宽度
+ *
+ * @param paint
+ * @param text
+ * @return
+ */
+export const getTextWidth = function(ctx, text) {
+	var width = parseInt(ctx.measureText(text).width);
+	// console.log('getTextWidth->' + width);
+	return width;
+}
+
+/**
  * 分割动感歌词
  * @param {Object} lyricsLineInfo
  * @param {Object} ctx
@@ -439,7 +450,7 @@ function fixTransliterationLrc(lyricsLineInfo, transliterationLrcInfo) {
 function splitLineDynamicLyrics(lyricsLineInfo, ctx, textMaxWidth) {
 	var splitLyricsInfos = [];
 	var lyricsContent = lyricsLineInfo.lyricsContent;
-	var width = parseInt(ctx.measureText(lyricsContent).width);
+	var width = getTextWidth(ctx, lyricsContent);
 	if (width > textMaxWidth) {
 		var lyricsWordsList = [];
 		var wordsDisIntervalList = [];
@@ -451,13 +462,13 @@ function splitLineDynamicLyrics(lyricsLineInfo, ctx, textMaxWidth) {
 		var wordsDisInterval = lyricsLineInfo.wordsDisInterval;
 		var curWord = lyricsWords[i];
 		var curWordDisInterval = wordsDisInterval[i];
-		var curWordWidth = parseInt(ctx.measureText(curWord).width);
+		var curWordWidth = getTextWidth(ctx, curWord);
 		var temp = '';
 		for (var i = 0; i < lyricsWords.length; i++) {
 			var curWord = lyricsWords[i];
 
 			var curWordDisInterval = wordsDisInterval[i];
-			var curWordWidth = parseInt(ctx.measureText(curWord).width);
+			var curWordWidth = getTextWidth(ctx, curWord);
 			if ((wordWidth + curWordWidth) > textMaxWidth) {
 
 				splitLyricsInfos.push({
