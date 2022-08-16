@@ -10,8 +10,8 @@
 export const getLineNumber = function(lyricsType, lyricsInfos, curPlayingTime, playOffset) {
 	var index = -1;
 	//添加歌词增量
-	var playingTime = curPlayingTime + playOffset;
 	if (lyricsType == 0) {
+		var playingTime = parseInt(curPlayingTime) + parseInt(playOffset);
 		//lrc歌词只有开始时间
 		for (var i = 0; i < lyricsInfos.length; i++) {
 			var temp = lyricsInfos[i];
@@ -29,6 +29,61 @@ export const getLineNumber = function(lyricsType, lyricsInfos, curPlayingTime, p
 }
 
 /**
+ * 绘画普通文本
+ * @param {Object} ctx
+ * @param {Object} paint
+ * @param {Object} text
+ * @param {Object} x
+ * @param {Object} y
+ */
+export const drawText = function(ctx, paint, text, x, y) {
+	ctx.setFillStyle(paint);
+	ctx.fillText(text, x, y);
+}
+
+/**
+ * 绘画动感文本
+ *
+ * @param ctx
+ * @param paint   默认画笔
+ * @param paintHL 高亮画笔
+ * @param text    文本
+ * @param hlWidth 高亮宽度
+ * @param x
+ * @param y
+ */
+export const drawDynamicText = function(ctx, paint, paintHL, fontSize, text, hlWidth, x, y) {
+	console.log(hlWidth);
+	ctx.save();
+	ctx.setFillStyle(paint);
+	ctx.fillText(text, x, y);
+
+
+	//设置动感歌词过渡效果
+	var textHeight = fontSize + fontSize / 3;
+	ctx.rect(x, y - textHeight, hlWidth, textHeight);
+
+	ctx.clip();
+	ctx.setFillStyle(paintHL);
+	ctx.fillText(text, x, y);
+	ctx.restore();
+
+
+}
+
+/**
+ * 时间格式化
+ * @param {Object} time
+ */
+export const timeToMMSS = function(time) {
+	if (Number(time) == NaN || Number(time) < 1000) return '00:00';
+	var dateTime = Number(time) / 1000;
+	var m = parseInt((dateTime % 3600) / 60);
+	var s = parseInt(dateTime % 60);
+	return (m > 9 ? m : '0' + m) + ':' + (s > 9 ? s : '0' + s);
+}
+
+/**
  * 获取动感歌词所唱歌行数(可用于分割行)
  *
  * @param lyricsInfos    歌词
@@ -40,7 +95,7 @@ export const getLineNumber = function(lyricsType, lyricsInfos, curPlayingTime, p
 export const getDynamicLrcLineNum = function(lyricsInfos, curPlayingTime, playOffset) {
 	var index = -1;
 	//添加歌词增量
-	var playingTime = curPlayingTime + playOffset;
+	var playingTime = parseInt(curPlayingTime) + parseInt(playOffset);
 	for (var i = 0; i < lyricsInfos.length; i++) {
 		var temp = lyricsInfos[i];
 		var startTime = temp.startTime;
@@ -64,15 +119,16 @@ export const getDynamicLrcLineNum = function(lyricsInfos, curPlayingTime, playOf
  */
 export const getDynamicLrcWordHLWidth = function(ctx, lyricsInfos, lyricsLineNum, curPlayingTime, playOffset) {
 	var result = 0;
-	if (lyricsLineNum >= 0 && lyricsLineNum < lyricsInfos.size()) {
+	if (lyricsLineNum >= 0 && lyricsLineNum < lyricsInfos.length) {
 		var temp = lyricsInfos[lyricsLineNum];
 		var lyricsContent = (temp.lyricsContent).replace(/\s+$/g, ''); //js去掉空格
+		//console.log(lyricsContent);
 		//空行歌词
 		if (lyricsContent == '') {
 			return result;
 		}
 		//添加歌词增量
-		var playingTime = curPlayingTime + playOffset;
+		var playingTime = parseInt(curPlayingTime) + parseInt(playOffset);
 		//获取字和字时间
 		var startTime = temp.startTime;
 		var endTime = temp.endTime;
@@ -104,7 +160,7 @@ export const getDynamicLrcWordHLWidth = function(ctx, lyricsInfos, lyricsLineNum
 					var lenTime = interval - (elapseTime - playingTime);
 					var hlWordWidth = avg * lenTime;
 
-					return parseInt((beforeWordWidth + hlWordWidth));
+					return parseInt(beforeWordWidth + hlWordWidth);
 				}
 				tempWords += lyricsWords[i];
 			}

@@ -50,8 +50,8 @@ export const krcParser = function(contentBase64) {
 			//时间补偿值
 			var offset = lrcText.substring('[offset:'.length, lrcText.lastIndexOf(']'));
 			//console.log(offset);
-			lrcInfo.defOffset = offset;
-			lrcInfo.offset = offset;
+			lrcInfo.defOffset = parseInt(offset);
+			lrcInfo.offset = parseInt(offset);
 		} else if (lrcText.indexOf('[language:') == 0) {
 			//翻译歌词和音译歌词
 			var language = lrcText.substring('[language:'.length, lrcText.lastIndexOf(']'));

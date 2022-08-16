@@ -3,8 +3,8 @@
 	<template-view>
 		<template slot="container">
 			<div class="horizontal">
-				<view class="manyLyricsView">
-					<canvas v-bind:style="{ height: viewHeight + 'px !important', width: viewWidth + 'px !important' }" canvas-id="manyLyricsView" id="manyLyricsView"></canvas>
+				<view class="lrcView">
+					<canvas v-bind:style="{ height: viewHeight + 'px !important', width: viewWidth + 'px !important' }" canvas-id="manyLyricsView"></canvas>
 				</view>
 			</div>
 			<view class="footer">
@@ -18,10 +18,10 @@
 <script>
 import { reqLyricsList, reqLyricsInfo } from '@/http/api.js';
 import { krcParser } from '@/assets/js/parserUtil.js';
-import { splitLyrics, getLineNumber, getDynamicLrcLineNum, getDynamicLrcWordHLWidth, getTextWidth } from '@/assets/js/lrcUtil.js';
-import { animate, linear } from 'popmotion';
+import { splitLyrics, getLineNumber, getDynamicLrcLineNum, getDynamicLrcWordHLWidth, getTextWidth, drawText, drawDynamicText, timeToMMSS } from '@/assets/js/lrcUtil.js';
+import { animate } from 'popmotion';
 
-const ctx = uni.createCanvasContext('manyLyricsView');
+var mCtx = null; //全局
 var animateObj = null;
 
 export default {
@@ -42,7 +42,6 @@ export default {
 			spaceLineHeight: 20, //间隔高度
 			extraLrcSpaceLineHeight: 10, //额外歌词间隔高度
 			offsetY: 0, //歌词在Y轴上的偏移量，只要用于动画
-			duration: 250, //Y轴移动的时间
 			showLrcType: -1, //歌词显示方式：-1是没歌词，0是默认歌词，1是音译歌词，2是翻译歌词
 			hasLrcType: -1, //集合含有歌词类型，-1是没歌词，0是默认歌词，1是音译歌词，2是翻译歌词，3是全部歌词都有
 
@@ -94,6 +93,7 @@ export default {
 		};
 	},
 	onLoad(option) {
+		// console.log('onLoad')
 		const { windowWidth, windowHeight } = uni.getSystemInfoSync();
 		this.windowWidth = windowWidth;
 		this.windowHeight = windowHeight;
@@ -101,6 +101,12 @@ export default {
 		this.viewHeight = windowHeight - 120;
 
 		this.initData(option);
+	},
+	onReady() {
+		// console.log('onReady')
+
+		//统一处理画布相关
+		this.invalidateView();
 
 		//监听操作
 		const that = this;
@@ -137,15 +143,14 @@ export default {
 			}
 		});
 	},
-	onReady() {
-		//统一处理画布相关
-		this.invalidateView();
-	},
 	methods: {
 		/**
 		 * 绘画
 		 */
 		invalidateView() {
+			const ctx = uni.createCanvasContext('manyLyricsView', this); //需要在这里赋值，要不第二次进入后，会不显示。
+			ctx.setTextBaseline('bottom');
+			mCtx = ctx;
 			//console.log('invalidateView->');
 			ctx.setFontSize(this.fontSize);
 			if (this.lyricsInfo == null) {
@@ -157,13 +162,310 @@ export default {
 				ctx.fillText(this.defText, x, y);
 			} else {
 				//有歌词
+				this.drawLrcView(ctx);
 			}
 			ctx.draw();
 		},
 		/**
+		 * 画歌词
+		 * @param {Object} ctx
+		 */
+		drawLrcView(ctx) {
+			//画歌词(view高度+ 单行高度)/2(居中显示) + 该行之前歌词的高度
+			var centerY = parseInt((this.viewHeight + this.getTextHeight()) / 2) + this.getLineNumHeight(this.lyricsLineNum) - this.offsetY;
+			//高度和额外高度
+			var lineHeight = this.getTextHeight() + this.spaceLineHeight;
+			var extraLineHeight = this.getExtraTextHeight() + this.extraLrcSpaceLineHeight;
+
+			//画当前行
+			var lyricsType = this.lyricsInfo.lyricsType;
+			var lyricsInfos = this.lyricsInfo.lyricsInfos;
+			var translateLrcInfos = this.lyricsInfo.translateLrcInfos; //翻译歌词
+			var transliterationLrcInfos = this.lyricsInfo.transliterationLrcInfos; //音译歌词
+			var hasTransliteration = transliterationLrcInfos != undefined && transliterationLrcInfos != null && transliterationLrcInfos.length > 0;
+			var hasTranslate = translateLrcInfos != undefined && translateLrcInfos != null && translateLrcInfos.length > 0;
+
+			var lineBottomY = centerY;
+
+			var lyricsLineInfo = lyricsInfos[this.lyricsLineNum];
+			var splitLyricsInfos = lyricsLineInfo.splitLyricsInfos;
+			if (lyricsType == 1) {
+				lineBottomY = this.drawDynamicText(
+					ctx,
+					this.defColor,
+					this.colorHLs[this.colorIndex],
+					splitLyricsInfos,
+					this.splitLyricsLineNum,
+					this.splitLyricsWordHLWidth,
+					this.spaceLineHeight,
+					lineBottomY,
+					lineHeight
+				);
+			} else {
+				lineBottomY = this.drawDownHLText(ctx, this.colorHLs[this.colorIndex], splitLyricsInfos, this.spaceLineHeight, lineBottomY, lineHeight);
+			}
+
+			//注：lineBottomY在绘画时，需要先添加一行歌词的高度。因为drawtext的方法，是直接从lineBottomY的高度先开始绘画歌词
+			//未超出下视图，绘画当前行额外歌词
+			if (this.showLrcType > 0 && (hasTransliteration || hasTranslate)) {
+				lineBottomY = lineBottomY + extraLineHeight;
+				if (hasTranslate && this.showLrcType == 2) {
+					//显示翻译歌词
+					var translateLrcInfo = translateLrcInfos[this.lyricsLineNum];
+					var splitTranslateLyricsInfos = translateLrcInfo.splitLyricsInfos;
+
+					if (lyricsType == 1) {
+						//动感歌词方式绘画
+						lineBottomY = this.drawDynamicText(
+							ctx,
+							this.defColor,
+							this.colorHLs[this.colorIndex],
+							splitTranslateLyricsInfos,
+							this.extraSplitLyricsLineNum,
+							this.extraSplitLyricsWordHLWidth,
+							this.extraLrcSpaceLineHeight,
+							lineBottomY,
+							extraLineHeight
+						);
+					} else {
+						//高亮方式绘画lrc歌词
+						lineBottomY = this.drawDownHLText(ctx, mExtraPaint, mExtraPaintHL, splitTranslateLyricsInfos, mExtraLrcSpaceLineHeight, lineBottomY, extraLineHeight);
+					}
+				} else if (hasTransliteration && this.showLrcType == 1) {
+					//显示音译歌词
+					var transliterationLrcInfo = transliterationLrcInfos[this.lyricsLineNum];
+					var splitTransliterationLyricsInfos = transliterationLrcInfo.splitLyricsInfos;
+					lineBottomY = this.drawDynamicText(
+						ctx,
+						this.defColor,
+						this.colorHLs[this.colorIndex],
+						splitTransliterationLyricsInfos,
+						this.extraSplitLyricsLineNum,
+						this.extraSplitLyricsWordHLWidth,
+						this.extraLrcSpaceLineHeight,
+						lineBottomY,
+						extraLineHeight
+					);
+				}
+			}
+
+			//画当前行下面的歌词
+			for (var i = this.lyricsLineNum + 1; i < lyricsInfos.length; i++) {
+				//超出下视图
+				if (lineBottomY + lineHeight > this.viewHeight) {
+					break;
+				}
+				var tempLyricsLineInfo = lyricsInfos[i];
+				var tempSplitLyricsInfos = tempLyricsLineInfo.splitLyricsInfos;
+
+				lineBottomY = lineBottomY + lineHeight;
+				lineBottomY = this.drawDownText(ctx, this.defColor, tempSplitLyricsInfos, this.spaceLineHeight, lineBottomY, lineHeight);
+
+				if (this.showLrcType > 0 && (hasTransliteration || hasTranslate)) {
+					if (lineBottomY + extraLineHeight < this.viewHeight) {
+						lineBottomY = lineBottomY + extraLineHeight;
+
+						if (hasTranslate && this.showLrcType == 2) {
+							//显示翻译歌词
+							var translateLrcInfo = translateLrcInfos[i];
+							var splitTranslateLyricsInfos = translateLrcInfo.splitLyricsInfos;
+
+							//普通方式绘画歌词
+							lineBottomY = this.drawDownText(ctx, this.defColor, splitTranslateLyricsInfos, this.extraLrcSpaceLineHeight, lineBottomY, extraLineHeight);
+						} else if (hasTransliteration && this.showLrcType == 1) {
+							//显示音译歌词
+							var transliterationLrcInfo = transliterationLrcInfos[i];
+							var splitTransliterationLyricsInfos = transliterationLrcInfo.splitLyricsInfos;
+							//普通方式绘画歌词
+							lineBottomY = this.drawDownText(ctx, this.defColor, splitTransliterationLyricsInfos, this.extraLrcSpaceLineHeight, lineBottomY, extraLineHeight);
+						}
+					} else {
+						break;
+					}
+				}
+			}
+
+			//画当前行之前的行歌词
+			// 画当前歌词之前的歌词
+			var lineTopY = centerY;
+			for (var i = this.lyricsLineNum - 1; i >= 0; i--) {
+				if (lineTopY < lineHeight) {
+					break;
+				}
+
+				if (this.showLrcType > 0 && (hasTransliteration || hasTranslate)) {
+					lineTopY -= lineHeight;
+
+					if (hasTranslate && this.showLrcType == 2) {
+						//显示翻译歌词
+						var translateLrcInfo = translateLrcInfos[i];
+						var splitTranslateLyricsInfos = translateLrcInfo.splitLyricsInfos;
+						//普通方式绘画歌词
+						//画额外歌词
+						lineTopY = this.drawUpText(ctx, this.defColor, splitTranslateLyricsInfos, extraLineHeight, lineTopY);
+					} else if (hasTransliteration && this.showLrcType == 1) {
+						//显示音译歌词
+						var transliterationLrcInfo = transliterationLrcInfos[i];
+						var splitTransliterationLyricsInfos = transliterationLrcInfo.splitLyricsInfos;
+						//普通方式绘画歌词
+						lineTopY = this.drawUpText(ctx, this.defColor, splitTransliterationLyricsInfos, extraLineHeight, lineTopY);
+					}
+
+					if (lineTopY < extraLineHeight) {
+						break;
+					}
+					//画默认歌词
+					lineTopY -= extraLineHeight;
+				} else {
+					//没有额外歌词
+					//画默认歌词
+					lineTopY -= lineHeight;
+				}
+
+				var tempLyricsLineInfo = lyricsInfos[i];
+				var tempSplitLyricsInfos = tempLyricsLineInfo.splitLyricsInfos;
+				lineTopY = this.drawUpText(ctx, this.defColor, tempSplitLyricsInfos, lineHeight, lineTopY);
+			}
+		},
+
+		/**
+		 * 绘画向上的歌词
+		 *
+		 * @param ctx
+		 * @param paint
+		 * @param splitLyricsInfos
+		 * @param lineHeight
+		 * @param fristLineTextY
+		 * @return
+		 */
+		drawUpText(ctx, paint, splitLyricsInfos, lineHeight, fristLineTextY) {
+			var lineTopY = fristLineTextY;
+			for (var i = splitLyricsInfos.length - 1; i >= 0; i--) {
+				if (i != splitLyricsInfos.length - 1) {
+					lineTopY -= lineHeight;
+				}
+
+				//超出上视图
+				if (lineTopY < lineHeight) {
+					break;
+				}
+
+				var text = splitLyricsInfos[i].lyricsContent;
+
+				var textWidth = getTextWidth(ctx, text);
+				var textX = parseInt((this.viewWidth - textWidth) / 2);
+
+				drawText(ctx, paint, text, textX, lineTopY);
+			}
+			return lineTopY;
+		},
+
+		/**
+		 * 绘画向下歌词
+		 *
+		 * @param ctx
+		 * @param paint
+		 * @param splitLyricsInfos
+		 * @param spaceLineHeight
+		 * @param fristLineTextY
+		 * @return
+		 */
+		drawDownText(ctx, paint, splitLyricsInfos, spaceLineHeight, fristLineTextY, lineHeight) {
+			var lineBottomY = fristLineTextY;
+			//往下绘画歌词
+			for (var i = 0; i < splitLyricsInfos.length; i++) {
+				var text = splitLyricsInfos[i].lyricsContent;
+				lineBottomY = fristLineTextY + i * lineHeight;
+				//超出下视图
+				if (lineBottomY + spaceLineHeight > this.viewHeight) {
+					break;
+				}
+
+				var textWidth = getTextWidth(ctx, text);
+				var textX = parseInt((this.viewWidth - textWidth) / 2);
+
+				//普通lrc歌词高亮显示
+				drawText(ctx, paint, text, textX, lineBottomY);
+			}
+			return lineBottomY;
+		},
+
+		/**
+		 * 绘画向下高亮歌词
+		 *
+		 * @param ctx
+		 * @param paintHL
+		 * @param splitLyricsInfos
+		 * @param spaceLineHeight
+		 * @param fristLineTextY
+		 * @return
+		 */
+		drawDownHLText(ctx, paintHL, splitLyricsInfos, spaceLineHeight, fristLineTextY, lineHeight) {
+			var lineBottomY = fristLineTextY;
+			//往下绘画歌词
+			for (var i = 0; i < splitLyricsInfos.length; i++) {
+				var text = splitLyricsInfos[i].lyricsContent;
+				lineBottomY = fristLineTextY + i * lineHeight;
+				//超出下视图
+				if (lineBottomY + spaceLineHeight > this.viewHeight) {
+					break;
+				}
+
+				var textWidth = getTextWidth(ctx, text);
+				var textX = parseInt((this.viewWidth - textWidth) / 2);
+
+				//普通lrc歌词高亮显示
+				drawText(ctx, paintHL, text, textX, lineBottomY);
+			}
+			return lineBottomY;
+		},
+
+		/**
+		 * 绘画当前的歌词
+		 *
+		 * @param ctx
+		 * @param paint
+		 * @param paintHL
+		 * @param splitLyricsInfos
+		 * @param splitLyricsLineNum
+		 * @param splitLyricsWordHLWidth
+		 * @param fristLineTextY
+		 * @param spaceLineHeight
+		 * @return
+		 */
+		drawDynamicText(ctx, paint, paintHL, splitLyricsInfos, splitLyricsLineNum, splitLyricsWordHLWidth, spaceLineHeight, fristLineTextY, lineHeight) {
+			var lineBottomY = fristLineTextY;
+			//往下绘画歌词
+			for (var i = 0; i < splitLyricsInfos.length; i++) {
+				var text = splitLyricsInfos[i].lyricsContent;
+				lineBottomY = fristLineTextY + i * lineHeight;
+				//超出下视图
+				if (lineBottomY + spaceLineHeight > this.viewHeight) {
+					break;
+				}
+
+				var textWidth = getTextWidth(ctx, text);
+				var textX = parseInt((this.viewWidth - textWidth) / 2);
+
+				if (i < splitLyricsLineNum) {
+					//已唱歌词
+					drawText(ctx, paintHL, text, textX, lineBottomY);
+				} else if (i == splitLyricsLineNum) {
+					//绘画动感歌词
+					drawDynamicText(ctx, paint, paintHL, this.fontSize, text, splitLyricsWordHLWidth, textX, lineBottomY);
+				} else if (i > splitLyricsLineNum) {
+					//未唱歌词
+					drawText(ctx, paint, text, textX, lineBottomY);
+				}
+			}
+			return lineBottomY;
+		},
+
+		/**
 		 * 重置lrc数据
 		 */
 		resetLrcData() {
+			this.lyricsInfo = null;
 			this.lyricsType = 1;
 			this.lyricsLineNum = 0;
 			this.splitLyricsLineNum = 0;
@@ -173,6 +475,7 @@ export default {
 			this.offsetY = 0;
 			this.showLrcType = -1;
 			this.hasLrcType = -1;
+			this.invalidateView();
 		},
 		/**
 		 * 分割歌词
@@ -180,7 +483,7 @@ export default {
 		 */
 		splitLrc(lyricsInfo) {
 			//分割歌词
-			splitLyrics(lyricsInfo, ctx, this.viewWidth);
+			splitLyrics(lyricsInfo, mCtx, this.viewWidth);
 			this.lyricsType = lyricsInfo.lyricsType;
 			var lyricsInfos = lyricsInfo.lyricsInfos; //默认歌词
 			var translateLrcInfos = lyricsInfo.translateLrcInfos; //翻译歌词
@@ -207,17 +510,20 @@ export default {
 			this.lyricsInfo = lyricsInfo;
 			console.log('loadLrcFinish->');
 		},
+
 		/**
 		 * 更新视图
 		 * @param {Object} playProgress
 		 */
 		updateView(playProgress) {
-			//console.log(playProgress)
+			// console.log(timeToMMSS(playProgress));
 			if (this.lyricsInfo == null) return;
 			try {
 				var lyricsInfos = this.lyricsInfo.lyricsInfos;
 				var lyricsType = this.lyricsInfo.lyricsType;
 				var offset = this.lyricsInfo.offset;
+				// console.log(lyricsType)
+
 				var oldLyricsLineNum = this.lyricsLineNum;
 				var translateLrcInfos = this.lyricsInfo.translateLrcInfos; //翻译歌词
 				var hasTranslate = translateLrcInfos != undefined && translateLrcInfos != null && translateLrcInfos.length > 0;
@@ -226,12 +532,16 @@ export default {
 
 				//获取默认歌词当前行
 				this.lyricsLineNum = getLineNumber(lyricsType, lyricsInfos, playProgress, offset);
+				//console.log(lyricsType == 1 && this.lyricsLineNum >= 0 && this.lyricsLineNum < lyricsInfos.length)
 				if (lyricsType == 1 && this.lyricsLineNum >= 0 && this.lyricsLineNum < lyricsInfos.length) {
 					//动感歌词，则需要获取分割歌词当前所在的行
 					var splitLyricsInfos = lyricsInfos[this.lyricsLineNum].splitLyricsInfos;
+					//console.log(splitLyricsInfos)
 					this.splitLyricsLineNum = getDynamicLrcLineNum(splitLyricsInfos, playProgress, offset);
+					// console.log(this.splitLyricsLineNum >= 0 && this.splitLyricsLineNum < splitLyricsInfos.length)
 					if (this.splitLyricsLineNum >= 0 && this.splitLyricsLineNum < splitLyricsInfos.length) {
-						this.splitLyricsWordHLWidth = getDynamicLrcWordHLWidth(ctx, splitLyricsInfos, this.splitLyricsLineNum, playProgress, offset);
+						this.splitLyricsWordHLWidth = getDynamicLrcWordHLWidth(mCtx, splitLyricsInfos, this.splitLyricsLineNum, playProgress, offset);
+						//console.log(this.splitLyricsWordHLWidth);
 					}
 				}
 				if (this.showLrcType <= 0) {
@@ -247,7 +557,7 @@ export default {
 						var splitTranslateLrcInfos = translateLrcInfos[this.lyricsLineNum].splitLyricsInfos;
 						this.extraSplitLyricsLineNum = getDynamicLrcLineNum(splitTranslateLrcInfos, playProgress, offset);
 						if (this.extraSplitLyricsLineNum >= 0 && this.extraSplitLyricsLineNum < splitTranslateLrcInfos.length) {
-							this.extraSplitLyricsWordHLWidth = getDynamicLrcWordHLWidth(ctx, splitTranslateLrcInfos, this.extraSplitLyricsLineNum, playProgress, offset);
+							this.extraSplitLyricsWordHLWidth = getDynamicLrcWordHLWidth(mCtx, splitTranslateLrcInfos, this.extraSplitLyricsLineNum, playProgress, offset);
 						}
 					}
 					return;
@@ -258,18 +568,19 @@ export default {
 					//获取分割歌词当前行
 					var splitTransliterationLrcInfos = transliterationLrcInfos[this.lyricsLineNum].splitLyricsInfos;
 					this.extraSplitLyricsLineNum = getDynamicLrcLineNum(splitTransliterationLrcInfos, playProgress, offset);
-					if (this.extraSplitLyricsLineNum >= 0 && this.extraSplitLyricsLineNum < splitTransliterationLrcInfos.size()) {
-						this.extraSplitLyricsWordHLWidth = getDynamicLrcWordHLWidth(ctx, splitTransliterationLrcInfos, this.extraSplitLyricsLineNum, playProgress, offset);
+					if (this.extraSplitLyricsLineNum >= 0 && this.extraSplitLyricsLineNum < splitTransliterationLrcInfos.length) {
+						this.extraSplitLyricsWordHLWidth = getDynamicLrcWordHLWidth(mCtx, splitTransliterationLrcInfos, this.extraSplitLyricsLineNum, playProgress, offset);
 					}
 				}
 			} catch (err) {
 			} finally {
-				// console.log(oldLyricsLineNum != this.lyricsLineNum);
+				// console.log(this.lyricsLineNum);
 				if (oldLyricsLineNum != this.lyricsLineNum) {
 					//与上一行索引不同，需要使用动画移动歌词
 					this.scrollViewY(this.offsetY, this.getLineNumHeight(this.lyricsLineNum));
+				} else {
+					this.invalidateView();
 				}
-				this.invalidateView();
 			}
 		},
 
@@ -339,7 +650,16 @@ export default {
 			if (animateObj != null) {
 				animateObj.stop();
 			}
-			animateObj = animate({ from: from, to: to, duration: this.duration, ease: linear, onUpdate: latest => (this.offsetY = latest) });
+			const that = this;
+			animateObj = animate({
+				from: from,
+				to: to,
+				duration: 50,
+				onUpdate: function(latest) {
+					that.offsetY = parseInt(latest);
+					that.invalidateView();
+				}
+			});
 		},
 
 		/**
@@ -380,6 +700,7 @@ export default {
 			// console.log(e.index);
 			switch (e.index) {
 				case 0:
+					this.resetLrcData();
 					//上一首
 					this.sendAction({
 						action: 'pre'
@@ -389,7 +710,7 @@ export default {
 
 				case 1:
 					//下一首
-
+					this.resetLrcData();
 					this.sendAction({
 						action: 'next'
 					});
@@ -481,7 +802,7 @@ export default {
 
 <style scoped>
 @import '@/assets/css/style.css';
-.manyLyricsView {
+.lrcView {
 	margin-top: 20rpx;
 }
 
