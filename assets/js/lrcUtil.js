@@ -52,23 +52,22 @@ export const drawText = function(ctx, paint, text, x, y) {
  * @param x
  * @param y
  */
-export const drawDynamicText = function(ctx, paint, paintHL, fontSize, text, hlWidth, x, y) {
-	console.log(hlWidth);
+export const drawDynamicText = function(ctx, paint, paintHL, fontSize, spaceLineHeight, text, hlWidth, x, y) {
 	ctx.save();
 	ctx.setFillStyle(paint);
 	ctx.fillText(text, x, y);
 
 
 	//设置动感歌词过渡效果
-	var textHeight = fontSize + fontSize / 3;
-	ctx.rect(x, y - textHeight, hlWidth, textHeight);
+	ctx.setFillStyle('transparent');
+	var offset = spaceLineHeight / 4;
+    ctx.fillRect(x, y - fontSize - offset, hlWidth, fontSize + offset * 2);
 
 	ctx.clip();
 	ctx.setFillStyle(paintHL);
 	ctx.fillText(text, x, y);
+	
 	ctx.restore();
-
-
 }
 
 /**
@@ -160,7 +159,7 @@ export const getDynamicLrcWordHLWidth = function(ctx, lyricsInfos, lyricsLineNum
 					var lenTime = interval - (elapseTime - playingTime);
 					var hlWordWidth = avg * lenTime;
 
-					return parseInt(beforeWordWidth + hlWordWidth);
+					return (beforeWordWidth + hlWordWidth);
 				}
 				tempWords += lyricsWords[i];
 			}
@@ -492,7 +491,7 @@ function fixTransliterationLrc(lyricsLineInfo, transliterationLrcInfo) {
  * @return
  */
 export const getTextWidth = function(ctx, text) {
-	var width = parseInt(ctx.measureText(text).width);
+	var width = ctx.measureText(text).width;
 	// console.log('getTextWidth->' + width);
 	return width;
 }

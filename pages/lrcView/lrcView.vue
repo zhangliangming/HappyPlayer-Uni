@@ -452,7 +452,7 @@ export default {
 					drawText(ctx, paintHL, text, textX, lineBottomY);
 				} else if (i == splitLyricsLineNum) {
 					//绘画动感歌词
-					drawDynamicText(ctx, paint, paintHL, this.fontSize, text, splitLyricsWordHLWidth, textX, lineBottomY);
+					drawDynamicText(ctx, paint, paintHL, this.fontSize, this.spaceLineHeight, text, splitLyricsWordHLWidth, textX, lineBottomY);
 				} else if (i > splitLyricsLineNum) {
 					//未唱歌词
 					drawText(ctx, paint, text, textX, lineBottomY);
@@ -657,7 +657,7 @@ export default {
 				duration: 50,
 				onUpdate: function(latest) {
 					that.offsetY = parseInt(latest);
-					that.invalidateView();
+					//that.invalidateView();
 				}
 			});
 		},

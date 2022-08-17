@@ -1,8 +1,8 @@
 <template>
 	<view>
-		<slot v-if="viewTag == 'successView'" name="container"></slot>
+		<slot v-show="viewTag == 'successView'" name="container"></slot>
 
-		<slot v-else-if="viewTag == 'loadingView'" name="loadingView">
+		<slot v-if="viewTag == 'loadingView'" name="loadingView">
 			<div class="horizontal vertical">
 				<div class="mt10" v-if="loadText != undefined && loadText != ''">{{ loadText }}</div>
 			</div>
@@ -14,7 +14,7 @@
 			</div>
 		</slot>
 
-		<slot v-else name="errorView">
+		<slot v-else-if="viewTag == 'errorView'" name="errorView">
 			<div class="horizontal pt60">
 				<div>
 					<div class="mt10" v-if="errorText != undefined && errorText != ''">{{ errorText }}</div>
