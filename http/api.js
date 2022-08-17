@@ -3,12 +3,20 @@
  */
 export const reqLastSongList = function(success, error) {
 	uni.request({
-		url: 'http://m.kugou.com',
+		url: 'http://mobilecdnbj.kugou.com/api/v3/rank/newsong',
 		method: 'GET',
 		data: {
-			json: true
+			json: true,
+			version: 9108,
+			plat: 0,
+			with_cover: 1,
+			pagesize: 100,
+			type: 3,
+			page: 1
 		},
-		header: {},
+		header: {
+			'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1'
+		},
 		success: (res) => {
 			success && success(res.data);
 		},

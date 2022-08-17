@@ -1,22 +1,42 @@
 # 简介 #
-乐乐音乐网页版主要是基于uni-app框架开发的音乐播放器，目前只支持krc歌词（支持翻译和音译歌词），不支持歌词快进功能。
+乐乐音乐网页版主要是基于uni-app框架开发的音乐播放器，目前只支持krc歌词（支持歌词颜色、字体大小、歌词进度调整和翻译和音译歌词），不支持歌词快进功能。
 # 环境配置 #
     HBuilder 3.5.3.20220729
     Vue 2.0
 # 功能截图 #
 ## 网络 ##
 
-![](https://bilnn1.sharepoint.cn/sites/pan04/_layouts/15/download.aspx?UniqueId=c2d21f07-4c14-4450-87cc-caa6b44f2498&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvYmlsbm4xLnNoYXJlcG9pbnQuY25AN2MwZWNhMjAtYTE1Yi00MTJjLTg1MTAtZTI3MzFlZmU1MzMxIiwiaXNzIjoiMDAwMDAwMDMtMDAwMC0wZmYxLWNlMDAtMDAwMDAwMDAwMDAwIiwibmJmIjoiMTY2MDYzMTE0MyIsImV4cCI6IjE2NjA2MzQ3NDMiLCJlbmRwb2ludHVybCI6IlZNZWcycDBvWk1rS2hFSW1IQkpMWEpvYU9Pak0rMEd2Z2s5YVFRWUJ2TTA9IiwiZW5kcG9pbnR1cmxMZW5ndGgiOiIxMjgiLCJpc2xvb3BiYWNrIjoiVHJ1ZSIsImNpZCI6IlltTmlZbUUwTWpFdFltRTVPUzAwT0dFMUxXSTVOekl0T0dJMk9ETTVZamszTTJVNCIsInZlciI6Imhhc2hlZHByb29mdG9rZW4iLCJzaXRlaWQiOiJNemhoWldSa1pXVXRZMk5sWmkwME1qZ3hMVGs0TXpZdE5HRTNaV0k1T0RJeU1UTTIiLCJhcHBfZGlzcGxheW5hbWUiOiJzaXRlMDUiLCJhcHBpZCI6IjczMTA4NzI4LTM0YWEtNDI5NC04ZTE4LTlmZDBiNDE5ZDdhNSIsInRpZCI6IjdjMGVjYTIwLWExNWItNDEyYy04NTEwLWUyNzMxZWZlNTMzMSIsInVwbiI6InBhbjAzQGJpbG5uMS5wYXJ0bmVyLm9ubXNjaGluYS5jbiIsInB1aWQiOiIxMDAzMzIzMEM2MEVGNUJEIiwiY2FjaGVrZXkiOiIwaC5mfG1lbWJlcnNoaXB8MTAwMzMyMzBjNjBlZjViZEBsaXZlLmNvbSIsInNjcCI6ImFsbGZpbGVzLndyaXRlIiwidHQiOiIyIiwidXNlUGVyc2lzdGVudENvb2tpZSI6bnVsbCwiaXBhZGRyIjoiNTIuMTMwLjEwLjE2MSJ9.Mk9ORDc1NlRkZ255QU56ZUZwMW5SaldnSks5SlFLMkhvK2FPWEdTWnM3UT0&ApiVersion=2.0)
+![](assets\preview\net.png)
+
+## 默认歌词 ##
+
+**点击网络界面的"+"按钮进入**
+
+![](assets\preview\def_lrc.png)
+
+## 翻译歌词 ##
+
+![](assets\preview\translate.png)
+
+## 音译歌词 ##
+
+![](assets\preview\transliteration.png)
 
 ## 设置 ##
 
-![](https://bilnn1.sharepoint.cn/sites/pan04/_layouts/15/download.aspx?UniqueId=83bf692c-67e7-4239-801c-4e6df6a1a2aa&Translate=false&tempauth=eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvYmlsbm4xLnNoYXJlcG9pbnQuY25AN2MwZWNhMjAtYTE1Yi00MTJjLTg1MTAtZTI3MzFlZmU1MzMxIiwiaXNzIjoiMDAwMDAwMDMtMDAwMC0wZmYxLWNlMDAtMDAwMDAwMDAwMDAwIiwibmJmIjoiMTY2MDYzMTA4OSIsImV4cCI6IjE2NjA2MzQ2ODkiLCJlbmRwb2ludHVybCI6IlBnZjZQeW5qT2pwZWlNS0NiUCtIQWlhNUg0cFJoMmxSQTY0MWpPdVhjajQ9IiwiZW5kcG9pbnR1cmxMZW5ndGgiOiIxMjgiLCJpc2xvb3BiYWNrIjoiVHJ1ZSIsImNpZCI6Ik16VmhOV1EzWTJFdE5XUTROUzAwWW1Ka0xUbGtZemd0TldFNVkyTTNOMlZqTVdFNCIsInZlciI6Imhhc2hlZHByb29mdG9rZW4iLCJzaXRlaWQiOiJNemhoWldSa1pXVXRZMk5sWmkwME1qZ3hMVGs0TXpZdE5HRTNaV0k1T0RJeU1UTTIiLCJhcHBfZGlzcGxheW5hbWUiOiJzaXRlMDUiLCJhcHBpZCI6IjczMTA4NzI4LTM0YWEtNDI5NC04ZTE4LTlmZDBiNDE5ZDdhNSIsInRpZCI6IjdjMGVjYTIwLWExNWItNDEyYy04NTEwLWUyNzMxZWZlNTMzMSIsInVwbiI6InBhbjAzQGJpbG5uMS5wYXJ0bmVyLm9ubXNjaGluYS5jbiIsInB1aWQiOiIxMDAzMzIzMEM2MEVGNUJEIiwiY2FjaGVrZXkiOiIwaC5mfG1lbWJlcnNoaXB8MTAwMzMyMzBjNjBlZjViZEBsaXZlLmNvbSIsInNjcCI6ImFsbGZpbGVzLndyaXRlIiwidHQiOiIyIiwidXNlUGVyc2lzdGVudENvb2tpZSI6bnVsbCwiaXBhZGRyIjoiNTIuMTMwLjEwLjE2MSJ9.TWwwTXZsMnZpMzlxQ0d1TjQ0cmNvSDMwZ3RuUCtjcVpXelZkTm8wTkVJMD0&ApiVersion=2.0)
+![](assets\preview\setting.png)
+
+## 关于 ##
+
+![](assets\preview\about.png)
+
+## 反馈 ##
+
+![](assets\preview\feedback.png)
 
 # 性能 #
 
-解析歌词20-50秒内，相对于Android客户端性能上相对有点差。
-
-# 安装包 #
+注：该版本主要是针对H5来开发，如果在手机上运行卡顿严重，建议下载Android版本；如果放到电脑网页上运行，性能较好。
 
 # 参考 #
 
@@ -40,4 +60,4 @@
 # 其他 #
 
 - 由于uni是一种多平台的框架，有兴趣的可将代码编译到其他的平台和拓展其他格式的歌词。
-- 目前是将Java代码语言翻译成对应的Js语言，导致性能比较差。
+- 目前是将Java代码语言翻译成对应的Js语言，在手机端上运行性能比较差，如果在PC上运行性能相对较好。

@@ -58,7 +58,11 @@
     "vueVersion" : "2",
     "h5" : {
         "router" : {
-            "mode" : "history"
+            "mode" : "history",
+            "base" : ""
+        },
+        "devServer" : {
+            "https" : false
         }
     },
     "fallbackLocale" : "zh-Hans"

@@ -46,12 +46,14 @@ export default {
 			hasLrcType: -1, //集合含有歌词类型，-1是没歌词，0是默认歌词，1是音译歌词，2是翻译歌词，3是全部歌词都有
 
 			minFontSize: 12, //最小字体
-			maxFontSize: 20, //最大字体
+			maxFontSize: 40, //最大字体
 			fontSize: 12, //字体大小
 			colorIndex: 0, //颜色索引
 			defColor: '#666666', //默认颜色
 			colorHLs: ['#FFD700', '#fe8db6', '#feb88e', '#adfe8e', '#8dc7ff', '#e69bff'], //高亮颜色集合
 
+			offsets: [-1000, -500, 0, 500, 1000],
+			offsetIndex: 2,
 			curHash: '', //当前hash
 			curProgress: 0, //当前进度
 			maxProgress: 100,
@@ -85,7 +87,7 @@ export default {
 			],
 			buttonGroup: [
 				{
-					text: '播放/暂停',
+					text: '播/暂',
 					backgroundColor: '#555',
 					color: '#fff'
 				}
@@ -101,6 +103,9 @@ export default {
 		this.viewHeight = windowHeight - 120;
 
 		this.initData(option);
+	},
+	onBackPress() {
+		uni.$off('event');
 	},
 	onReady() {
 		// console.log('onReady')
@@ -482,6 +487,8 @@ export default {
 		 * @param {Object} lyricsInfo
 		 */
 		splitLrc(lyricsInfo) {
+			//设置字体大小
+			mCtx.setFontSize(this.fontSize);
 			//分割歌词
 			splitLyrics(lyricsInfo, mCtx, this.viewWidth);
 			this.lyricsType = lyricsInfo.lyricsType;
@@ -507,8 +514,6 @@ export default {
 				//没有歌词
 				this.hasLrcType = -1;
 			}
-			this.lyricsInfo = lyricsInfo;
-			console.log('loadLrcFinish->');
 		},
 
 		/**
@@ -654,10 +659,10 @@ export default {
 			animateObj = animate({
 				from: from,
 				to: to,
-				duration: 50,
+				duration: 250,
 				onUpdate: function(latest) {
 					that.offsetY = parseInt(latest);
-					//that.invalidateView();
+					that.invalidateView();
 				}
 			});
 		},
@@ -719,14 +724,87 @@ export default {
 
 				case 2:
 					//颜色
+					var length = this.colorHLs.length;
+					var curIndex = this.colorIndex;
+					curIndex++;
+					if (curIndex == length) {
+						curIndex = 0;
+					}
+					this.colorIndex = curIndex;
+					this.invalidateView();
+
 					break;
 
 				case 3:
 					//大小
+					var curFontSize = this.fontSize;
+					curFontSize++;
+					if (curFontSize == this.maxFontSize) {
+						curFontSize = this.minFontSize;
+					}
+					this.fontSize = curFontSize;
+
+					if (this.lyricsInfo != null) {
+						this.splitLrc(this.lyricsInfo);
+						this.offsetY = this.getLineNumHeight(this.lyricsLineNum);
+						this.updateView(this.curProgress);
+					}
 					break;
 
 				case 4:
 					//歌词进度
+					if (this.lyricsInfo != null) {
+						var curIndex = this.offsetIndex;
+						var length = this.offsets.length;
+						curIndex++;
+						if (curIndex == length) {
+							curIndex = 0;
+						}
+						this.offsetIndex = curIndex;
+						// console.log(curIndex)
+						var offset = this.lyricsInfo.defOffset + this.offsets[curIndex];
+						// console.log(offset)
+						this.lyricsInfo.offset = offset;
+					}
+
+					break;
+
+				case 5:
+					//音译/翻译
+					if (this.lyricsInfo != null) {
+						//console.log(this.hasLrcType);
+						var showLrcType = Math.max(this.showLrcType, 0);
+						showLrcType++;
+
+						//console.log(showLrcType);
+
+						var flag = false;
+						if (showLrcType == 1 && (this.hasLrcType == 1 || this.hasLrcType == 3)) {
+							flag = true;
+							this.showLrcType = showLrcType;
+						}
+
+						//console.log(showLrcType);
+
+						if (showLrcType == 1 && !flag) {
+							showLrcType++;
+						}
+
+						//console.log(showLrcType);
+
+						if (showLrcType == 2 && (this.hasLrcType == 2 || this.hasLrcType == 3)) {
+							flag = true;
+							this.showLrcType = showLrcType;
+						}
+
+						//console.log(showLrcType);
+						if (!flag) {
+							this.showLrcType = 0;
+						}
+						// console.log(this.showLrcType);
+						this.offsetY = this.getLineNumHeight(this.lyricsLineNum);
+						this.updateView(this.curProgress);
+					}
 					break;
 
 				default:
@@ -747,7 +825,7 @@ export default {
 		 * 加载歌词
 		 */
 		loadLrc(fileName, duration, hash) {
-			console.log('loadLrc->');
+			//console.log('loadLrc->');
 			const that = this;
 			reqLyricsList(fileName, duration, hash, function(result) {
 				//console.log(result)
@@ -792,6 +870,8 @@ export default {
 				if (that.curHash == hash) {
 					//当前歌词
 					that.splitLrc(lyricsInfo);
+					//console.log('loadLrcFinish->');
+					that.lyricsInfo = lyricsInfo;
 					that.updateView(that.curProgress);
 				}
 			});

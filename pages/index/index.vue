@@ -33,8 +33,6 @@ export default {
 		return {
 			viewTag: 'loadingView', //successView：成功页面，loadingView：加载中页面，nullView：数据为空页面，errorView：错误页面
 			errorText: '网络连接不通，请检查网络',
-			callbackNum: 0,
-			curCBNum: 0,
 			songDatas: [],
 			curHash: '',
 			curIndex: -1
@@ -86,14 +84,13 @@ export default {
 		 * @param {Object} result
 		 */
 		handleLastSongList(result) {
-			var length = result.data.length;
-			this.callbackNum = length;
-			this.curCBNum = 0;
+			var length = result.data.info.length;
 			for (var i = 0; i < length; i++) {
-				var data = result.data[i];
+				var data = result.data.info[i];
 				var hash = data.hash;
 				this.handleSongInfo(hash);
 			}
+			this.viewTag = 'successView';
 		},
 
 		/**
@@ -107,12 +104,14 @@ export default {
 				key,
 				hash,
 				function(result) {
-					that.curCBNum++;
 					if (result.status == 0) {
 						return;
 					}
 					var data = {};
 					var urls = result.url;
+					if (urls == undefined) {
+						return;
+					}
 					var flag = false;
 					for (var i = 0; i < urls.length; i++) {
 						var url = urls[i];
@@ -128,17 +127,8 @@ export default {
 						data.duration = parseInt(result.timeLength) * 1000;
 						that.songDatas.push(data);
 					}
-
-					if (that.curCBNum == that.callbackNum) {
-						that.handleComplete();
-					}
 				},
-				function(error) {
-					that.curCBNum++;
-					if (that.curCBNum == that.callbackNum) {
-						that.handleComplete();
-					}
-				}
+				function(error) {}
 			);
 		},
 		/**
@@ -205,7 +195,7 @@ export default {
 				this.sendEvent({
 					action: 'play'
 				});
-				
+
 				if (mTimer != null) {
 					clearTimeout(mTimer);
 				}
@@ -327,16 +317,6 @@ export default {
 			}
 			var songInfo = this.songDatas[curIndex];
 			this.playSong(curIndex, songInfo);
-		},
-		/**
-		 * 处理完成
-		 */
-		handleComplete() {
-			if (this.songDatas.length > 0) {
-				this.viewTag = 'successView';
-			} else {
-				this.viewTag = 'nullView';
-			}
 		}
 	}
 };
