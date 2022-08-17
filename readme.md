@@ -4,6 +4,9 @@
     HBuilder 3.5.3.20220729
     Vue 2.0
 # 功能截图 #
+
+可到项目的assets/preview路径下查看预览图。
+
 ## 网络 ##
 
 ![](assets\preview\net.png)
