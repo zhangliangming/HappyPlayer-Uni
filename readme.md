@@ -9,33 +9,33 @@
 
 ## 网络 ##
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/net.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/net.png)
 
 ## 默认歌词 ##
 
 **点击网络界面的"+"按钮进入**
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/def_lrc.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/def_lrc.png)
 
 ## 翻译歌词 ##
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/translate.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/translate.png)
 
 ## 音译歌词 ##
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/transliteration.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/transliteration.png)
 
 ## 设置 ##
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/setting.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/setting.png)
 
 ## 关于 ##
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/about.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/about.png)
 
 ## 反馈 ##
 
-![](https://github.com/zhangliangming/HappyPlayer-Uni/blob/master/assets/preview/feedback.png)
+![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/feedback.png)
 
 # 性能 #
 
