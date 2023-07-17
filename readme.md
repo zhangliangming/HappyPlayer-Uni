@@ -5,37 +5,42 @@
     Vue 2.0
 # 功能截图 #
 
-可到项目的assets/preview路径下查看预览图。
-
 ## 网络 ##
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/net.png)
+![net.png](https://upload-images.jianshu.io/upload_images/4111431-7c7ee8a3f84b4356.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## 默认歌词 ##
 
 **点击网络界面的"+"按钮进入**
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/def_lrc.png)
+![def_lrc.png](https://upload-images.jianshu.io/upload_images/4111431-79772a8d1ef330c3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## 翻译歌词 ##
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/translate.png)
+![translate.png](https://upload-images.jianshu.io/upload_images/4111431-f005af83dfdca1f2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## 音译歌词 ##
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/transliteration.png)
+![transliteration.png](https://upload-images.jianshu.io/upload_images/4111431-203da9950387f489.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## 设置 ##
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/setting.png)
+![setting.png](https://upload-images.jianshu.io/upload_images/4111431-a72797f5e2e72e87.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## 关于 ##
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/about.png)
+![about.png](https://upload-images.jianshu.io/upload_images/4111431-87c217b4ee400e98.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 ## 反馈 ##
 
-![](https://raw.githubusercontent.com/zhangliangming/HappyPlayer-Uni/master/assets/preview/feedback.png)
+![feedback.png](https://upload-images.jianshu.io/upload_images/4111431-703cd98984952ea5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
 
 # 性能 #
 
@@ -59,6 +64,10 @@
 ## 乐乐音乐Android版本
 
 [https://github.com/zhangliangming/HappyPlayer5.git](https://github.com/zhangliangming/HappyPlayer5.git)
+
+### 项目地址
+
+[https://github.com/zhangliangming/HappyPlayer-Uni.git](https://github.com/zhangliangming/HappyPlayer-Uni.git)
 
 # 其他 #
 
